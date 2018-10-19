@@ -83,42 +83,12 @@ class ReutersCorpus:
         while self._files and not current_file:
             filename = self._files.pop(0)
             try:
-                current_file = open(filename, 'r')
+                current_file = open(filename, 'r', errors='ignore')
                 soup = BeautifulSoup(current_file, "html.parser")
                 reuters_docs = [ReutersDocument(doc) for doc in soup.find_all("reuters")]
             except IOError:
                 print("Could not find {}".format(filename))
         return reuters_docs
-
-
-# class TokenStream:
-#     def __init__(self, corpus: ReutersCorpus):
-#         self._corpus = corpus
-#         self._docid = None
-#         self._tokens = None
-#
-#     def set_preprocessor(self, preprocessor):
-#         ## TODO method stub
-#         pass
-#
-#     def next_token(self):
-#         if not self._tokens:
-#             self._fetch_next_doc()
-#         if self._tokens:
-#             return Token(self._tokens.pop(0), self._docid)
-#         else:
-#             return None
-#
-#     def has_next_token(self):
-#         return self._corpus.has_next_doc() or len(self._tokens) != 0
-#
-#     def _fetch_next_doc(self):
-#         if not self._corpus:
-#             raise ReutersCorpusException("Reuters Corpus does not exists")
-#         nextdoc = self._corpus.next_doc()
-#         if nextdoc:
-#             self._docid = nextdoc.docid
-#             self._tokens = nextdoc.get_tokens()
 
 
 class ReutersCorpusException(Exception):

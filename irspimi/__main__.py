@@ -5,6 +5,7 @@ import dict_compression
 from inverted_index import InvertedIndex
 from expression_eval import Parser, Evaluator
 
+
 # parser = argparse.ArgumentParser(description='irspimi is a information retrieval system for the Reuters21578 corpus using the SPIMI algorithm.')
 # parser.add_argument(
 #     '-v',
@@ -44,15 +45,24 @@ from expression_eval import Parser, Evaluator
 # test.test()
 # test.test()
 
-def build_index_mode():
+def build_index_mode1():
+    print("Building index with multipass merge")
     fileList = irsystem.build(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 22)], None)
     fileList = [f.name for f in fileList]
-    outfile = irsystem.merge_index(fileList)
+    outfile = irsystem.merge_index(fileList, "./index_mp", multipass=True)
+    print(outfile)
+
+
+def build_index_mode2():
+    print("Building index with singlepass merge")
+    fileList = irsystem.build(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 22)], None)
+    fileList = [f.name for f in fileList]
+    outfile = irsystem.merge_index(fileList, "./index_sp", multipass=False)
     print(outfile)
 
 
 def search_mode():
-    index = irsystem.load_index("inverted_index.ii")
+    index = irsystem.load_index("./index_mp/inverted_index.ii")
     while True:
         expr = input("What do you want to search for?")
         for resp in irsystem.search_expr(index, expr):
@@ -60,5 +70,14 @@ def search_mode():
         # print(irsystem.search_expr(index, expr))
 
 
-build_index_mode()
-# search_mode()
+# import time
+# start_time = time.time()
+# build_index_mode1()
+# print("--- %s seconds ---" % (time.time() - start_time))
+
+# start_time = time.time()
+# build_index_mode2()
+# print("--- %s seconds ---" % (time.time() - start_time))
+
+
+search_mode()

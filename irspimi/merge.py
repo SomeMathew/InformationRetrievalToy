@@ -4,24 +4,81 @@ from inverted_index import extern_input, extern_output, TermPostings, Posting
 from collections import deque
 
 
+class MultiPassMergeSPIMI:
+    def __init__(self, in_filenames: List[str], out_filename: str, output_buffer_length: int = 50,
+                 input_buffer_length: int = 500, input_buffer_count: int = 4):
+        """Initializes a merger object for the SPIMI algorithm.
+        This object uses an external multi-pass k-way merge to complete the work.
+
+        :param in_filenames: List of index blocks filename to merge
+        :param out_filename: Name of the output file for the merged index
+        :param output_buffer_length: Length of the output buffer, for each term and posting list
+        :param input_buffer_length: Length of each input buffer for each block
+        :param input_buffer_count: Number of input buffers
+        """
+        self._in_filenames = in_filenames
+        self._out_filename = out_filename
+        self._output_buffer_length = output_buffer_length
+        self._input_buffer_length = input_buffer_length
+        self._input_buffer_count = input_buffer_count
+        self._next_pass_filenames = []
+
+    def external_merge(self):
+        """Execute the merge according to the initialized settings.
+
+        :return: output filename
+        :rtype: str
+        """
+        pass_i = 0
+        while True:
+            last_merge = len(self._in_filenames) <= self._input_buffer_count
+            self._merge_pass(pass_i, last_merge)
+            if len(self._next_pass_filenames) > 1:
+                self._in_filenames = self._next_pass_filenames
+                self._next_pass_filenames = []
+                pass_i += 1
+            else:
+                break
+        return self._next_pass_filenames[0]
+
+    def _merge_pass(self, pass_i: int, last_merge: bool = False):
+        """Executes one pass of the merge algorithm over in files
+
+        :param pass_i: Pass index
+        :param last_merge: Set to true to create the final index and dictionary
+        :return: None
+        """
+        next_out_i = 0
+        for next_files in [self._in_filenames[i: i + self._input_buffer_count] for i in
+                           range(0, len(self._in_filenames), self._input_buffer_count)]:
+            next_out_filename = self._out_filename if last_merge else "{}.{}{}-pass{}".format(self._out_filename,
+                                                                                              "partial", next_out_i,
+                                                                                              pass_i)
+            next_out_i += 1
+            mergespimi = MergeSPIMI(next_files, next_out_filename, self._output_buffer_length,
+                                    self._input_buffer_length, not last_merge)
+            self._next_pass_filenames.append(mergespimi.external_merge())
+
+
 class MergeSPIMI:
     DICTIONARY_FILE_SUFFIX = "dictionary"
 
-    def __init__(self, in_files: List[str], out_file: str, output_buffer_length: int = 50,
-                 input_buffer_length: int = 50):
+    def __init__(self, in_filenames: List[str], out_filename: str, output_buffer_length: int = 50,
+                 input_buffer_length: int = 50, no_external_dictionary: bool = False):
         """Initializes a merger object for the SPIMI algorithm.
         This object uses an external k-way merge to complete the work.
 
-        :param in_files: List of index blocks filename to merge
-        :param out_file: Name of the output file for the merged index
+        :param in_filenames: List of index blocks filename to merge
+        :param out_filename: Name of the output file for the merged index
         :param output_buffer_length: Length of the output buffer, for each term and posting list
         :param input_buffer_length: Length of each input buffer for each block
         """
+        self._no_external_dictionary = no_external_dictionary
         self._input_buffer_length = input_buffer_length
         self._output_buffer_length = output_buffer_length
         self._output_buffer = deque(maxlen=output_buffer_length)
         self._files = []
-        for file_name in in_files:
+        for file_name in in_filenames:
             try:
                 f = open(file_name, "r")
                 self._files.append(f)
@@ -30,10 +87,11 @@ class MergeSPIMI:
                 print(e)
 
         try:
-            cur_file = out_file
+            cur_file = out_filename
             self._out = open(cur_file, "w")
-            cur_file = "{}.{}".format(out_file, MergeSPIMI.DICTIONARY_FILE_SUFFIX)
-            self._out_dict = open(cur_file, "w")
+            if not self._no_external_dictionary:
+                cur_file = "{}.{}".format(out_filename, MergeSPIMI.DICTIONARY_FILE_SUFFIX)
+                self._out_dict = open(cur_file, "w")
         except IOError as e:
             print("Unable to open output file {} to write.".format(cur_file))
             print(e)
@@ -47,14 +105,17 @@ class MergeSPIMI:
     def external_merge(self):
         """Execute the merge according to the initialized settings.
 
-        :return: None
+        :return: output filename
+        :rtype: str
         """
         while self._next_terms_heap:
             self._output_buffer.append(self._get_next_postings())
             if self._output_buffer_full() or not self._next_terms_heap:
                 self._write_out_buffer()
         self._out.close()
-        self._out_dict.close()
+        if not self._no_external_dictionary:
+            self._out_dict.close()
+        return self._out.name
 
     def _write_out_buffer(self):
         """Empties and writes the current output buffer to the index file on disk.
@@ -66,10 +127,12 @@ class MergeSPIMI:
             term_postings = self._output_buffer.popleft()
             file_pos = self._out.tell()
             self._out.write(extern_output(term_postings))
-            self._out_dict.write("{} : {}\n".format(term_postings.term, file_pos))
+            if not self._no_external_dictionary:
+                self._out_dict.write("{} : {}\n".format(term_postings.term, file_pos))
 
         self._out.flush()
-        self._out_dict.flush()
+        if not self._no_external_dictionary:
+            self._out_dict.flush()
 
     def _output_buffer_full(self):
         """Checks if the output buffer is full.
@@ -170,5 +233,8 @@ class MergeSPIMI:
 
 
 ## TODO remove this test
-# mergeSpimi = MergeSPIMI(["blocktest_0.blk", "blocktest_1.blk"], "merge_test.index")
-# mergeSpimi.external_merge()
+# mergeSpimi = MergeSPIMI(["blocks/SPIMIBLOCK_{}.blk".format(i) for i in range(0, 15)], "merge_test_onepass.index")
+# print(mergeSpimi.external_merge())
+#
+# mergeSpimi = MultiPassMergeSPIMI(["blocks/SPIMIBLOCK_{}.blk".format(i) for i in range(0, 15)], "merge_test.index")
+# print(mergeSpimi.external_merge())

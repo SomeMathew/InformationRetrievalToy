@@ -1,17 +1,15 @@
 from typing import List
+from inverted_index import TermPostings, Posting
 
 
-def search(expression: str):
-    pass
-
-def intersect(postings1: List[int], postings2: List[int]):
+def intersect(postings1: List[Posting], postings2: List[Posting]):
     intersection = []
     i = 0
     j = 0
     if postings1 and postings2:
         while i < len(postings1) and j < len(postings2):
             if postings1[i] == postings2[j]:
-                intersection.append(postings1[i])
+                intersection.append(Posting(postings1[i].docid, sorted(postings1[i].positions + postings2[j].positions)))
                 i += 1
                 j += 1
             elif postings1[i] < postings2[j]:
@@ -21,7 +19,7 @@ def intersect(postings1: List[int], postings2: List[int]):
     return intersection
 
 
-def union(postings1: List[int], postings2: List[int]):
+def union(postings1: List[Posting], postings2: List[Posting]):
     union_set = []
     i = 0
     j = 0
@@ -29,7 +27,7 @@ def union(postings1: List[int], postings2: List[int]):
     postings2 = postings2 if postings2 is not None else []
     while i < len(postings1) and j < len(postings2):
         if postings1[i] == postings2[j]:
-            union_set.append(postings1[i])
+            union_set.append(Posting(postings1[i].docid, sorted(postings1[i].positions + postings2[j].positions)))
             i += 1
             j += 1
         elif postings1[i] < postings2[j]:
@@ -38,8 +36,6 @@ def union(postings1: List[int], postings2: List[int]):
         else:
             union_set.append(postings2[j])
             j += 1
-
-    remaining_list = postings1 if i < len(postings1) else postings2 if j < len(postings2) else None
 
     # Empty the remaining lists
     while i < len(postings1):
@@ -80,7 +76,6 @@ def subtract(postings1: List[int], postings2: List[int]):
         i += 1
 
     return difference
-
 
 # Test TODO remove
 # a = [3, 4, 5, 6, 7, 8, 10]

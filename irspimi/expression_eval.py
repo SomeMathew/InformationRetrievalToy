@@ -1,6 +1,8 @@
 from nltk import word_tokenize
 from typing import Callable, List, Type
 from enum import Enum
+import search
+from inverted_index import InvertedIndex
 
 
 class TokenType(Enum):
@@ -52,14 +54,14 @@ class ParseTree:
 
 
 class BinOp(ParseTree):
-    def __init__(self, left_child, op, right_child):
+    def __init__(self, left_child, op: Token, right_child):
         self.left_child = left_child
         self.right_child = right_child
         self.op = op
 
 
 class Term(ParseTree):
-    def __init__(self, term):
+    def __init__(self, term: Token):
         self.term = term
 
 
@@ -114,19 +116,34 @@ class Parser:
         return node
 
 
+class Evaluator:
+    def __init__(self, parser: Parser, index: InvertedIndex):
+        self._parser = parser
+        self._index = index
+
+    def _visit(self, node):
+        if isinstance(node, BinOp):
+            return self._visit_binop(node)
+        elif isinstance(node, Term):
+            return self._visit_term(node)
+        else:
+            raise ExpressionParserException("Invalid Node Type: Aborting!")
+
+    def _visit_binop(self, node):
+        if node.op.type == TokenType.AND:
+            return search.intersect(self._visit(node.left_child), self._visit(node.right_child))
+        elif node.op.type == TokenType.OR:
+            return search.union(self._visit(node.left_child), self._visit(node.right_child))
+        else:
+            raise ExpressionParserException("Invalid Binary Operator Type: Aborting!")
+
+    def _visit_term(self, node):
+        return self._index.get_postings(node.term.value)
+
+    def evaluate(self):
+        tree = self._parser.parse()
+        return self._visit(tree)
+
+
 class ExpressionParserException(Exception):
     pass
-
-
-# TODO remove this test
-pt = Parser("George AND Bush OR Maria AND Ford")
-tree = pt.parse()
-print(tree)
-# pt = ParseTree("(NOT (George OR Georgie) AND Bush)")
-# print(pt)
-#
-# pt = ParseTree("(NOT (George OR Georgie))")
-# print(pt)
-#
-# pt = ParseTree("(NOT George)")
-# print(pt)

@@ -102,11 +102,10 @@ class MergeSPIMI:
                     self._refill_buffer(next_ifile)
         return TermPostings(next_term, postings_merged)
 
-    def _refill_buffer(self, ifile: int, line_count: int = 10):
+    def _refill_buffer(self, ifile: int):
         """ Fills the input buffer for the given file index
 
         :param ifile: File and buffer index to refill
-        :param line_count: Number of lines to fill
         :return: None
         """
         if self._input_buffer[ifile] is None:
@@ -114,12 +113,14 @@ class MergeSPIMI:
 
         buffer = self._input_buffer[ifile]
         file = self._files[ifile]
-        for i in range(0, line_count):
+        for i in range(0, self._input_buffer_length):
             next_line = file.readline().strip()
             if next_line:
                 term_postings = extern_input(next_line)
                 buffer.append(term_postings)
                 heappush(self._next_terms_heap, (term_postings.term, ifile))
+            else:
+                break
 
     @staticmethod
     def _merge_postings(l1, l2):

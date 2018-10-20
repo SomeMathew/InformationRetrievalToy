@@ -3,6 +3,8 @@ import string
 from bs4 import BeautifulSoup
 from nltk import word_tokenize, sent_tokenize
 from itertools import chain
+from dict_compression import Compression
+from collections import namedtuple
 
 
 class ReutersDocument:
@@ -31,25 +33,17 @@ class ReutersDocument:
         return tokens
 
 
-class ReutersToken:
-    """ Token from a particular document.
-
-    Attributes:
-        token (str): Token String.
-        docid (str): Document Id of this token.
-    """
-
-    def __init__(self, token: str, docid: str):
-        self.token = token
-        self.docid = docid
+DocToken = namedtuple("DocToken", ['token', 'docid', 'pos'])
 
 
 class ReutersCorpus:
-    def __init__(self, files: list):
+    def __init__(self, files: list, compression: Compression = None):
         self._files = files if files else []
         self._docs = []
         self._current_tokens = None
         self._current_docid = None
+        self._current_pos = 0
+        self._compression = compression
         # self._current_doc = None
 
     def __iter__(self):
@@ -62,8 +56,15 @@ class ReutersCorpus:
                 raise StopIteration
             self._current_docid = nextdoc.docid
             self._current_tokens = nextdoc.get_tokens()
+            self._current_pos = 0
         if self._current_tokens:
-            return ReutersToken(self._current_tokens.pop(0), self._current_docid)
+            next_token = self._current_tokens.pop(0)
+            self._current_pos += 1
+            if self._compression:
+                next_token = self._compression.compress(next_token)
+                if not next_token:
+                    return self.__next__()
+            return DocToken(token=next_token, docid=self._current_docid, pos=self._current_pos)
         else:
             raise StopIteration
 

@@ -1,12 +1,16 @@
 import argparse
 import os
+import irsystem
+import dict_compression
+from inverted_index import InvertedIndex
+from expression_eval import Parser, Evaluator
 
-parser = argparse.ArgumentParser(description='irspimi is a information retrieval system for the Reuters21578 corpus using the SPIMI algorithm.')
-parser.add_argument(
-    '-v',
-    dest='verbose',
-    action='store_true',
-    help='Prints debugging messages.')
+# parser = argparse.ArgumentParser(description='irspimi is a information retrieval system for the Reuters21578 corpus using the SPIMI algorithm.')
+# parser.add_argument(
+#     '-v',
+#     dest='verbose',
+#     action='store_true',
+#     help='Prints debugging messages.')
 # parser.add_argument(
 #     '-d',
 #     dest='dir',
@@ -16,14 +20,14 @@ parser.add_argument(
 #         'Default is {}.'.format(DEFAULT_PORT)),
 #     default=DEFAULT_PORT,
 #     metavar='PORT')
-parser.add_argument(
-    '-d',
-    dest='dir',
-    help=
-    ('Specifies the directory to fetch the Reuters21578 archive.'
-     ),
-    default='.',
-    metavar='PATH-TO-DIR')
+# parser.add_argument(
+#     '-d',
+#     dest='dir',
+#     help=
+#     ('Specifies the directory to fetch the Reuters21578 archive.'
+#      ),
+#     default='.',
+#     metavar='PATH-TO-DIR')
 
 # parser.add_argument(
 #     '--compress',
@@ -33,9 +37,28 @@ parser.add_argument(
 # )
 
 
-args = parser.parse_args()
+# args = parser.parse_args()
+#
+# print(os.listdir("."))
+# test = docprocessor.TokenStream(["test.txt", "invalid.txt"], ".")
+# test.test()
+# test.test()
 
-print(os.listdir("."))
-test = docprocessor.TokenStream(["test.txt", "invalid.txt"], ".")
-test.test()
-test.test()
+def build_index_mode():
+    fileList = irsystem.build(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 22)], None)
+    fileList = [f.name for f in fileList]
+    outfile = irsystem.merge_index(fileList)
+    print(outfile)
+
+
+def search_mode():
+    index = irsystem.load_index("inverted_index.ii")
+    while True:
+        expr = input("What do you want to search for?")
+        for resp in irsystem.search_expr(index, expr):
+            print(resp)
+        # print(irsystem.search_expr(index, expr))
+
+
+build_index_mode()
+# search_mode()

@@ -3,7 +3,7 @@ from spimi import SPIMI
 
 
 # sentences = nltk.tokenize.sent_tokenize("This is a,test. With a non complete!".translate(str.maketrans('string.punctuation, ' ', string.punctuation)))
-#print(word_tokenize("This is a test. With a non complete"))
+# print(word_tokenize("This is a test. With a non complete"))
 
 # for s in sentences:
 #     print(word_tokenize(s))
@@ -12,7 +12,6 @@ from spimi import SPIMI
 # doc = open("test.txt")
 # rtdoc = ReutersDocument(doc.read())
 # print(rtdoc.get_tokens())
-
 
 
 # rtdoc_text = rtdoc.get_text()
@@ -87,6 +86,7 @@ def test_spimi():
     rc = ReutersCorpus(["reut2-000.sgm", "bad_file.txt", "reut2-001.sgm"])
     spimi = SPIMI(rc, "./blocks/")
 
+
 # test_spimi()
 
 # merged = []
@@ -116,37 +116,36 @@ from merge import MergeSPIMI
 
 
 def test_merge():
-    l1 = [4,1,2,5]
-    l2 = [3,1,2,7,8,6,2,3,3,3,3]
+    l1 = [4, 1, 2, 5]
+    l2 = [3, 1, 2, 7, 8, 6, 2, 3, 3, 3, 3]
 
-    print("l1: {}, l2: {}".format(l1,l2))
-    merged = MergeSPIMI._merge_postings(l1,l2)
-    print("l1: {}, l2: {}, merged: {}".format(l1,l2, merged))
-
-    l1 = []
-    l2 = [3,1,2,7,8,6,2,3,3,3,3]
-    print("l1: {}, l2: {}".format(l1,l2))
-    merged = MergeSPIMI._merge_postings(l1,l2)
-    print("l1: {}, l2: {}, merged: {}".format(l1,l2, merged))
-
-    l2 = []
-    l1 = [3,1,2,7,8,6,2,3,3,3,3]
-    print("l1: {}, l2: {}".format(l1,l2))
-    merged = MergeSPIMI._merge_postings(l1,l2)
-    print("l1: {}, l2: {}, merged: {}".format(l1,l2, merged))
+    print("l1: {}, l2: {}".format(l1, l2))
+    merged = MergeSPIMI._merge_postings(l1, l2)
+    print("l1: {}, l2: {}, merged: {}".format(l1, l2, merged))
 
     l1 = []
-    l2 = []
-    print("l1: {}, l2: {}".format(l1,l2))
-    merged = MergeSPIMI._merge_postings(l1,l2)
-    print("l1: {}, l2: {}, merged: {}".format(l1,l2, merged))
+    l2 = [3, 1, 2, 7, 8, 6, 2, 3, 3, 3, 3]
+    print("l1: {}, l2: {}".format(l1, l2))
+    merged = MergeSPIMI._merge_postings(l1, l2)
+    print("l1: {}, l2: {}, merged: {}".format(l1, l2, merged))
 
+    l2 = []
+    l1 = [3, 1, 2, 7, 8, 6, 2, 3, 3, 3, 3]
+    print("l1: {}, l2: {}".format(l1, l2))
+    merged = MergeSPIMI._merge_postings(l1, l2)
+    print("l1: {}, l2: {}, merged: {}".format(l1, l2, merged))
+
+    l1 = []
+    l2 = []
+    print("l1: {}, l2: {}".format(l1, l2))
+    merged = MergeSPIMI._merge_postings(l1, l2)
+    print("l1: {}, l2: {}, merged: {}".format(l1, l2, merged))
 
     l1 = None
     l2 = None
-    print("l1: {}, l2: {}".format(l1,l2))
-    merged = MergeSPIMI._merge_postings(l1,l2)
-    print("l1: {}, l2: {}, merged: {}".format(l1,l2, merged))
+    print("l1: {}, l2: {}".format(l1, l2))
+    merged = MergeSPIMI._merge_postings(l1, l2)
+    print("l1: {}, l2: {}, merged: {}".format(l1, l2, merged))
 
 
 # test_merge()
@@ -154,5 +153,6 @@ def test_merge():
 
 def test_spimi_merge():
     ms = MergeSPIMI(["blocktest_0.blk", "blocktest_1.blk"], "merge_test.index")
+
 
 test_spimi_merge()

@@ -9,7 +9,8 @@ def intersect(postings1: List[Posting], postings2: List[Posting]):
     if postings1 and postings2:
         while i < len(postings1) and j < len(postings2):
             if postings1[i] == postings2[j]:
-                intersection.append(Posting(postings1[i].docid, sorted(postings1[i].positions + postings2[j].positions)))
+                intersection.append(
+                    Posting(postings1[i].docid, sorted(postings1[i].positions + postings2[j].positions)))
                 i += 1
                 j += 1
             elif postings1[i] < postings2[j]:
@@ -76,38 +77,3 @@ def subtract(postings1: List[int], postings2: List[int]):
         i += 1
 
     return difference
-
-# Test TODO remove
-# a = [3, 4, 5, 6, 7, 8, 10]
-# b = [1, 2, 5, 10]
-# c = [6, 10]
-# d = []
-# e = None
-# print("Intersection")
-# print(intersect(a, b))
-# print(intersect(a, c))
-# print(intersect(a, d))
-# print(intersect(e, a))
-# print(intersect(a, a))
-#
-# print("Union")
-# print(union(a, b))
-# print(union(a, c))
-# print(union(a, d))
-# print(union(e, a))
-# print(union(a, a))
-#
-# print("Difference")
-# print("A={}, B={}, A-B={}".format(a, b, subtract(a, b)))
-# print("A={}, B={}, A-B={}".format(a, c, subtract(a, c)))
-# print("A={}, B={}, A-B={}".format(a, d, subtract(a, d)))
-# print("A={}, B={}, A-B={}".format(e, a, subtract(e, a)))
-# print("A={}, B={}, A-B={}".format(a, a, subtract(a, a)))
-#
-# U = [x for x in range(1,21)]
-# print("Neg")
-# print("A={}, Not A={}".format(a, subtract(U, a)))
-# print("A={}, Not A={}".format(b, subtract(U, b)))
-# print("A={}, Not A={}".format(c, subtract(U, c)))
-# print("A={}, Not A={}".format(d, subtract(U, d)))
-# print("A={}, Not A={}".format(e, subtract(U, e)))

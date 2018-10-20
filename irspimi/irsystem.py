@@ -1,4 +1,3 @@
-## TODO Description of this file
 from reuters import ReutersCorpus
 from spimi import SPIMI
 from merge import MergeSPIMI, MultiPassMergeSPIMI

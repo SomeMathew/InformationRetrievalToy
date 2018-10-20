@@ -54,7 +54,7 @@ class NoStopWords(Compression):
         try:
             f = open(filename, "r")
             self._stop_words = []
-            for i in range(0,count):
+            for i in range(0, count):
                 w = f.readline().strip()
                 if w:
                     self._stop_words.append(w)

@@ -35,11 +35,11 @@ class InvertedIndex:
             return []
 
     def get_multiple_postings(self, terms: List[str]):
-        map = {}
+        postings_map = {}
         for term in terms:
             postings = self.get_postings(term)
-            map[term] = postings
-        return map
+            postings_map[term] = postings
+        return postings_map
 
 
 @total_ordering

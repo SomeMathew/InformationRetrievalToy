@@ -34,7 +34,6 @@ class SPIMI:
         sorted_terms = sorted(dictionary.keys())
 
         return self._write_to_disk(sorted_terms, dictionary) if sorted_terms else None
-        # return dictionary ## TODO this is a test
 
     @staticmethod
     def _add_to_dict(dictionary: dict, term: str):

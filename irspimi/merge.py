@@ -230,11 +230,3 @@ class MergeSPIMI:
                 last_posting.positions = MergeSPIMI._merge_postings(last_posting.positions, next_item.positions)
 
         return merged
-
-
-## TODO remove this test
-# mergeSpimi = MergeSPIMI(["blocks/SPIMIBLOCK_{}.blk".format(i) for i in range(0, 15)], "merge_test_onepass.index")
-# print(mergeSpimi.external_merge())
-#
-# mergeSpimi = MultiPassMergeSPIMI(["blocks/SPIMIBLOCK_{}.blk".format(i) for i in range(0, 15)], "merge_test.index")
-# print(mergeSpimi.external_merge())

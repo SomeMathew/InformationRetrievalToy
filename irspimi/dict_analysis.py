@@ -2,6 +2,10 @@ import irsystem
 import dict_compression
 from inverted_index import extern_input
 import json
+import os
+
+INDEX_STATS_FOLDER = "index_stats"
+INDEX_STATS_FILENAME = "index_stats.txt"
 
 
 def build_indexes(dfilters: dict):
@@ -58,11 +62,12 @@ dict_filters = {"none": None,
                      dict_compression.NoStopWords(150, stopwords_path),
                      dict_compression.PorterStemmer()])}
 
-
 build_indexes(dict_filters)
 stats_analysis = analyze(dict_filters)
 
 print(json.dumps(stats_analysis, indent=4))
-with open("index_analysis.txt", "w") as f:
+if not os.path.exists(INDEX_STATS_FOLDER):
+    os.makedirs(INDEX_STATS_FOLDER)
+with open("./{}/{}".format(INDEX_STATS_FOLDER, INDEX_STATS_FILENAME), "w") as f:
     json.dump(stats_analysis, f, indent=4)
     f.close()

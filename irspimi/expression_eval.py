@@ -65,6 +65,12 @@ class Term(ParseTree):
         self.term = term
 
 
+class UnaryOp(ParseTree):
+    def __init__(self, op: Token, child):
+        self.op = op
+        self.child = child
+
+
 class Parser:
     def __init__(self, expression: str):
         # self._expression = expression
@@ -106,7 +112,10 @@ class Parser:
 
     def _term(self):
         tok = self._current_token
-        if tok.type == TokenType.TERM:
+        if tok.type == TokenType.NOT:
+            self._ingest(TokenType.NOT)
+            node = UnaryOp(tok, self._term())
+        elif tok.type == TokenType.TERM:
             self._ingest(TokenType.TERM)
             node = Term(tok)
         elif tok.type == TokenType.LPAREN:
@@ -126,6 +135,8 @@ class Evaluator:
             return self._visit_binop(node)
         elif isinstance(node, Term):
             return self._visit_term(node)
+        elif isinstance(node, UnaryOp):
+            return self._visit_unaryop(node)
         else:
             raise ExpressionParserException("Invalid Node Type: Aborting!")
 
@@ -139,6 +150,9 @@ class Evaluator:
 
     def _visit_term(self, node):
         return self._index.get_postings(node.term.value)
+
+    def _visit_unaryop(self, node):
+        return search.neg(self._index.get_universe(), self._visit(node.child))
 
     def evaluate(self):
         tree = self._parser.parse()

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 from inverted_index import TermPostings, Posting
 
 
@@ -50,11 +50,11 @@ def union(postings1: List[Posting], postings2: List[Posting]):
     return union_set
 
 
-def neg(universe: List[int], postings: List[int]):
+def neg(universe: List[int], postings: List[Posting]):
     return subtract(universe, postings)
 
 
-def subtract(postings1: List[int], postings2: List[int]):
+def subtract(postings1: List[Union[Posting, int]], postings2: List[Posting]):
     difference = []
     postings1 = postings1 if postings1 is not None else []
     postings2 = postings2 if postings2 is not None else []
@@ -65,7 +65,10 @@ def subtract(postings1: List[int], postings2: List[int]):
             i += 1
             j += 1
         elif postings1[i] < postings2[j]:
-            difference.append(postings1[i])
+            if isinstance(postings1[i], int):
+                difference.append(Posting(postings1[i], []))
+            else:
+                difference.append(postings1[i])
             i += 1
         else:
             j += 1
@@ -73,7 +76,10 @@ def subtract(postings1: List[int], postings2: List[int]):
     # When here, either postings 1 is done or postings 2 is done
     # No other possibility, thus if its postings1 then add the rest
     while i < len(postings1):
-        difference.append(postings1[i])
+        if isinstance(postings1[i], int):
+            difference.append(Posting(postings1[i], []))
+        else:
+            difference.append(postings1[i])
         i += 1
 
     return difference

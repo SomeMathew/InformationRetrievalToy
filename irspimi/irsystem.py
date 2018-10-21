@@ -1,7 +1,7 @@
 from reuters import ReutersCorpus
 from spimi import SPIMI
 from merge import MergeSPIMI, MultiPassMergeSPIMI
-from inverted_index import InvertedIndex
+from inverted_index import InvertedIndex, InvertedIndexDescriptor, INVERTED_INDEX_DESCRIPTOR_SUFFIX
 from expression_eval import Parser, Evaluator
 import os
 import dict_compression
@@ -9,21 +9,26 @@ import dict_compression
 INVERTED_INDEX_FILENAME = "inverted_index.ii"
 
 
-def build(files: list, compression: dict_compression.Compression = None):
+def build_index(files: list, directory: str = ".", compression: dict_compression.Compression = None):
     corpus = ReutersCorpus(files, compression)
     spimi_inverter = SPIMI(token_stream=corpus, dir="./blocks/")
 
-    lst = []
+    blocks_filenames = []
     while True:
         d = spimi_inverter.invert()
         if d:
-            lst.append(d)
+            blocks_filenames.append(d)
         else:
             break
-    return lst
+
+    index_filename = _merge_index(blocks_filenames, directory, multipass=True)
+
+    descriptor = InvertedIndexDescriptor(corpus.docid_list, compression)
+    descriptor.write_to_file("{}/{}.{}".format(directory, INVERTED_INDEX_FILENAME, INVERTED_INDEX_DESCRIPTOR_SUFFIX))
+    return index_filename
 
 
-def merge_index(filenames: list, directory: str = ".", multipass: bool = True):
+def _merge_index(filenames: list, directory: str = ".", multipass: bool = True):
     """Merge the given list of blocks.
 
     :param filenames: List of block filename
@@ -36,7 +41,7 @@ def merge_index(filenames: list, directory: str = ".", multipass: bool = True):
         os.makedirs(directory)
     out_path = "{}/{}".format(directory, INVERTED_INDEX_FILENAME)
     if multipass:
-        ms = MultiPassMergeSPIMI(filenames, out_path, input_buffer_length=5000, input_buffer_count=8)
+        ms = MultiPassMergeSPIMI(filenames, out_path, input_buffer_length=10000, input_buffer_count=4)
     else:
         ms = MergeSPIMI(filenames, out_path, input_buffer_length=100)
     ms.external_merge()
@@ -51,6 +56,6 @@ def search_expr(index: InvertedIndex, expr: str):
     return res
 
 
-def load_index(filename: str):
-    index = InvertedIndex(filename)
+def load_index(directory: str):
+    index = InvertedIndex("{}/{}".format(directory, INVERTED_INDEX_FILENAME))
     return index

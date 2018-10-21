@@ -93,7 +93,7 @@ class SPIMI:
             output_file.flush()
             output_file.close()
             self._next_block_suffix += 1
-            return output_file
+            return output_file.name
         except IOError as e:
             print("Unable to open block to write the file {}".format(output_file_name))
             print(e)

@@ -1,25 +1,32 @@
 from typing import List
 from functools import total_ordering
 import re
+import dict_compression
+import json
+
+
+DICTIONARY_FILE_SUFFIX = "dictionary"
+INVERTED_INDEX_DESCRIPTOR_SUFFIX = "desc"
 
 
 class InvertedIndex:
-    DICTIONARY_FILE_SUFFIX = "dictionary"
-
-    def __init__(self, filename: str):
+    def __init__(self, index_filename: str):
         self._dictionary = {}
-        self._index_file = open(filename)
-        self._load_dictionary("{}.{}".format(filename, InvertedIndex.DICTIONARY_FILE_SUFFIX))
+        self._descriptor = None
+        self._index_file = open(index_filename)
+        self._load_dictionary("{}.{}".format(index_filename, DICTIONARY_FILE_SUFFIX))
+        self._load_descriptor("{}.{}".format(index_filename, INVERTED_INDEX_DESCRIPTOR_SUFFIX))
 
     def _load_dictionary(self, filename: str):
         with open(filename, "r") as f:
             for next_line in f:
                 next_line = next_line.strip()
                 if next_line:
-                    # term_posting = extern_input(next_line)
-                    # self._dictionary[term_posting.term] = term_posting
                     term, file_pos = next_line.split(" : ")
                     self._dictionary[term] = int(file_pos)
+
+    def _load_descriptor(self, filename):
+        self._descriptor = InvertedIndexDescriptor.build_from_file(filename)
 
     def get_postings(self, term: str):
         """Retrieves the postings for a given term
@@ -41,6 +48,33 @@ class InvertedIndex:
             postings_map[term] = postings
         return postings_map
 
+    def get_universe(self):
+        return self._descriptor.docid_list
+
+
+class InvertedIndexDescriptor:
+    def __init__(self, docid_list: list, compression: dict_compression.Compression = None):
+        self.docid_list = sorted(docid_list) if docid_list else None
+        self.compression = compression
+
+    def _as_dict(self):
+        return {"docid_list": self.docid_list, "compression": self.compression}
+
+    def write_to_file(self, filename: str):
+        f = open(filename, "w")
+        json.dump(self._as_dict(), f, indent=4)
+        f.close()
+
+    @staticmethod
+    def build_from_file(filename: str):
+        f = open(filename, "r")
+        descriptor_dict = json.load(f)
+        descriptor = InvertedIndexDescriptor(None, None)
+        for key, value in descriptor_dict.items():
+            setattr(descriptor, key, value)
+
+        return descriptor
+
 
 @total_ordering
 class Posting:
@@ -49,14 +83,20 @@ class Posting:
         self.positions = positions
 
     def __eq__(self, other):
-        if not isinstance(other, Posting):
+        if isinstance(other, int):
+            return self.docid == other
+        elif isinstance(other, Posting):
+            return self.docid == other.docid
+        else:
             return NotImplemented
-        return self.docid == other.docid
 
     def __lt__(self, other):
-        if not isinstance(other, Posting):
+        if isinstance(other, int):
+            return self.docid < other
+        elif isinstance(other, Posting):
+            return self.docid < other.docid
+        else:
             return NotImplemented
-        return self.docid < other.docid
 
     def __repr__(self):
         return "Posting(docid={}, positions={})".format(self.docid, self.positions)

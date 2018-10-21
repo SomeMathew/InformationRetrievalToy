@@ -1,6 +1,6 @@
 from typing import TextIO, List
 from heapq import heappush, heappop
-from inverted_index import extern_input, extern_output, TermPostings, Posting
+from inverted_index import DICTIONARY_FILE_SUFFIX, extern_input, extern_output, TermPostings, Posting
 from collections import deque
 
 
@@ -61,8 +61,6 @@ class MultiPassMergeSPIMI:
 
 
 class MergeSPIMI:
-    DICTIONARY_FILE_SUFFIX = "dictionary"
-
     def __init__(self, in_filenames: List[str], out_filename: str, output_buffer_length: int = 50,
                  input_buffer_length: int = 50, no_external_dictionary: bool = False):
         """Initializes a merger object for the SPIMI algorithm.
@@ -90,7 +88,7 @@ class MergeSPIMI:
             cur_file = out_filename
             self._out = open(cur_file, "w")
             if not self._no_external_dictionary:
-                cur_file = "{}.{}".format(out_filename, MergeSPIMI.DICTIONARY_FILE_SUFFIX)
+                cur_file = "{}.{}".format(out_filename, DICTIONARY_FILE_SUFFIX)
                 self._out_dict = open(cur_file, "w")
         except IOError as e:
             print("Unable to open output file {} to write.".format(cur_file))

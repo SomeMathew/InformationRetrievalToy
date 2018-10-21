@@ -4,7 +4,6 @@ import re
 import dict_compression
 import json
 
-
 DICTIONARY_FILE_SUFFIX = "dictionary"
 INVERTED_INDEX_DESCRIPTOR_SUFFIX = "desc"
 

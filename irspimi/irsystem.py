@@ -1,4 +1,4 @@
-from reuters import ReutersCorpus
+from reuters import ReutersCorpusStream
 from spimi import SPIMI
 from merge import MergeSPIMI, MultiPassMergeSPIMI
 from inverted_index import InvertedIndex, InvertedIndexDescriptor, INVERTED_INDEX_DESCRIPTOR_SUFFIX
@@ -10,7 +10,7 @@ INVERTED_INDEX_FILENAME = "inverted_index.ii"
 
 
 def build_index(files: list, directory: str = ".", compression: dict_compression.Compression = None):
-    corpus = ReutersCorpus(files, compression)
+    corpus = ReutersCorpusStream(files, compression)
     spimi_inverter = SPIMI(token_stream=corpus, dir="./blocks/")
 
     blocks_filenames = []

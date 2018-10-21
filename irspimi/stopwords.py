@@ -5,10 +5,10 @@ This uses collection frequency to select the 200 most commonly used words are st
 
 The ir system then uses this list to create a dictionary compression from first 30 and 150 stop words
 """
-from reuters import ReutersCorpus
+from reuters import ReutersCorpusStream
 
 dictionary = {}
-rc = ReutersCorpus(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 23)])
+rc = ReutersCorpusStream(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 23)])
 for tok in rc:
     if tok.token in dictionary:
         dictionary[tok.token] += 1

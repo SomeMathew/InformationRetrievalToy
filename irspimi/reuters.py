@@ -4,10 +4,17 @@ from bs4 import BeautifulSoup
 from nltk import word_tokenize, sent_tokenize
 from itertools import chain
 from dict_compression import Compression
-from collections import namedtuple, deque
+from collections import namedtuple, deque, OrderedDict
+from typing import List
+
+LAST_DOCID = 21578
+DOC_PER_FILE = 1000
 
 
 class ReutersDocument:
+    SOUP_CACHE_SIZE = 5
+    _soup_cache = OrderedDict()
+
     def __init__(self, soup):
         self._soup = soup
         self.docid = int(self._soup['newid'])
@@ -37,11 +44,71 @@ class ReutersDocument:
                        tok not in list(string.punctuation))
         return tokens
 
+    def get_title(self):
+        if not self._soup:
+            raise ReutersCorpusException("Could not parse the reuters SGML")
+        title_list = self._soup.find_all("title")
+        if title_list:
+            return "\n".join(title.get_text() for title in title_list)
+        else:
+            return ""
+
+    def __str__(self):
+        return str(self._soup)
+
+    @staticmethod
+    def retrieve_doc(docid, reuters_path="."):
+        """ Factory to get a ReutersDocument from a given docid
+
+        :param docid: Document Id
+        :param reuters_path: Path to the reuters corpus
+        :return: The ReutersDocument for this docid
+        :rtype: ReutersDocument
+        """
+
+        filename = ReutersDocument._docid_location_filename(docid)
+        if not filename:
+            return None
+        filepath = "{}/{}".format(reuters_path, filename)
+
+        if filename in ReutersDocument._soup_cache:
+            soup = ReutersDocument._soup_cache[filename]
+            ReutersDocument._soup_cache.move_to_end(filename)
+        else:
+            try:
+                file = open(filepath, 'r', errors='ignore')
+                soup = BeautifulSoup(file, "html.parser")
+                ReutersDocument._cache_soup(filename, soup)
+            except IOError as e:
+                print("Could not find {}".format(filename))
+                print(e)
+
+        docs = soup.select("reuters[newid=\"{}\"]".format(docid))
+        if docs:
+            return ReutersDocument(docs[0])
+        return None
+
+    @staticmethod
+    def _cache_soup(filename, soup):
+        if len(ReutersDocument._soup_cache) >= ReutersDocument.SOUP_CACHE_SIZE:
+            ReutersDocument._soup_cache.popitem(last=False)
+        ReutersDocument._soup_cache[filename] = soup
+
+    @staticmethod
+    def _docid_location_filename(docid):
+        """Returns the filename to where this docid resides in the Corpus"""
+        docid = int(docid)
+
+        if docid < 1 or docid > LAST_DOCID:
+            return None
+        file_id = int((docid - 1) / DOC_PER_FILE)
+        return "reut2-{:03}.sgm".format(file_id)
+
 
 DocToken = namedtuple("DocToken", ['token', 'docid', 'pos'])
 
 
-class ReutersCorpus:
+class ReutersCorpusStream:
     def __init__(self, files: list, compression: Compression = None):
         self._files = files if files else []
         self._docs = []
@@ -105,3 +172,12 @@ class ReutersCorpus:
 
 class ReutersCorpusException(Exception):
     pass
+
+
+def docs_details(docids: List[int], reuters_path: str):
+    details = {}
+    for docid in docids:
+        doc = ReutersDocument.retrieve_doc(docid, reuters_path)
+        if doc:
+            details[docid] = doc
+    return details

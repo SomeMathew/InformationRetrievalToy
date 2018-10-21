@@ -105,6 +105,8 @@ class Posting:
         return "({}, {})".format(self.docid, positions_str)
 
 
+
+
 class TermPostings:
     def __init__(self, term: str, postings: List[Posting]):
         self.term = term

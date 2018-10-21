@@ -39,7 +39,7 @@ class MultiPassMergeSPIMI:
                 pass_i += 1
             else:
                 break
-        return self._next_pass_filenames[0]
+        return self._next_pass_filenames[0] if self._next_pass_filenames else None
 
     def _merge_pass(self, pass_i: int, last_merge: bool = False):
         """Executes one pass of the merge algorithm over in files

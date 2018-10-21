@@ -1,6 +1,7 @@
 from typing import List
 from functools import total_ordering
 import re
+from dict_compression import MultipleCompression, NoNumbers, CaseFolding, NoStopWords, PorterStemmer
 import dict_compression
 import json
 
@@ -34,6 +35,8 @@ class InvertedIndex:
         :return: Postings list for the search term
         :rtype: List[Posting]
         """
+        if self._descriptor.compression:
+            term = self._descriptor.compression.compress(term)
         if term in self._dictionary:
             self._index_file.seek(self._dictionary[term])
             return extern_input(self._index_file.readline()).postings
@@ -57,7 +60,7 @@ class InvertedIndexDescriptor:
         self.compression = compression
 
     def _as_dict(self):
-        return {"docid_list": self.docid_list, "compression": self.compression}
+        return {"docid_list": self.docid_list, "compression": repr(self.compression)}
 
     def write_to_file(self, filename: str):
         f = open(filename, "w")
@@ -66,11 +69,18 @@ class InvertedIndexDescriptor:
 
     @staticmethod
     def build_from_file(filename: str):
+        """Builds a descriptor from a JSON file
+
+        :param filename: Filename to find the descriptor details
+        :return: Inverted Index Descriptor
+        :rtype: InvertedIndexDescriptor
+        """
         f = open(filename, "r")
         descriptor_dict = json.load(f)
-        descriptor = InvertedIndexDescriptor(None, None)
-        for key, value in descriptor_dict.items():
-            setattr(descriptor, key, value)
+        docid_list = descriptor_dict["docid_list"] if "docid_list" in descriptor_dict else None
+        compression = eval(descriptor_dict["compression"]) if "compression" in descriptor_dict and \
+                                                              descriptor_dict["compression"] else None
+        descriptor = InvertedIndexDescriptor(docid_list, compression)
 
         return descriptor
 
@@ -103,8 +113,6 @@ class Posting:
     def __str__(self):
         positions_str = ",".join(str(pos) for pos in self.positions) if self.positions else None
         return "({}, {})".format(self.docid, positions_str)
-
-
 
 
 class TermPostings:

@@ -23,6 +23,9 @@ class MultipleCompression(Compression):
                 return last_tok
         return last_tok
 
+    def __repr__(self):
+        return "MultipleCompression(filters={})".format(repr(self.filters))
+
 
 class NoNumbers(Compression):
     def __init__(self):

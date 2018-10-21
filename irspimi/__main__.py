@@ -1,24 +1,33 @@
 import argparse
-import os
 import irsystem
-import dict_compression
-from inverted_index import InvertedIndex
-from expression_eval import Parser, Evaluator
 from dict_compression import PorterStemmer, NoStopWords, CaseFolding, NoNumbers, MultipleCompression
-import json
+
+filters_dict = {"nonum": NoNumbers(),
+                "casefold": CaseFolding(),
+                "stopw30": NoStopWords(30, "stopwords.list"),
+                "stopw150": NoStopWords(150, "stopwords.list"),
+                "portstem": PorterStemmer()}
 
 
 def build_index(args: argparse.Namespace):
+    # Create Compression filters
+    compress_filter = None
+    if args.filters:
+        filters = [filters_dict[x] for x in args.filters if x in filters_dict]
+        if filters:
+            compress_filter = MultipleCompression(filters)
+    """Builds the Inverted Index"""
     print("Building index with multipass merge")
     # outfile = irsystem.build_index(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 22)], "./index_mp", None)
-    outfile = irsystem.build_index(args.corpus_files, args.directory, None)
+    outfile = irsystem.build_index(args.corpus_files, args.directory, compress_filter)
     print(outfile)
 
 
 def search_mode(args: argparse.Namespace):
+    """Search a corpus using a pre-built Inverted Index"""
     index = irsystem.load_index(args.directory)
     while True:
-        expr = input("What do you want to search for? (Type q to exit)")
+        expr = input("What do you want to search for? (Type q to exit)\n")
         if expr == "q":
             print("Goodbye!")
             break
@@ -43,9 +52,10 @@ def search_mode(args: argparse.Namespace):
 
 
 def doc_retrieval_mode(eval_result):
+    """Retrieves document from a search result."""
     results = eval_result.results
     while True:
-        resp = input("Enter a document id to retrieve it, q to search again")
+        resp = input("Enter a document id to retrieve it. (Type q to search again)\n")
         if resp == "q":
             break
         else:
@@ -85,6 +95,13 @@ build_parser.add_argument(
     dest="directory"
 )
 build_parser.add_argument(
+    "--compress-dict", "-c",
+    help="Select a dictionary compression algorithm. This option can be repeated with multiple filters.",
+    choices=filters_dict.keys(),
+    action="append",
+    dest="filters"
+)
+build_parser.add_argument(
     "corpus_files",
     help="List of files for the Reuters Corpus, MUST BE GIVEN IN ORDER",
     action="store",
@@ -120,5 +137,10 @@ search_parser.add_argument(
 )
 search_parser.set_defaults(func=search_mode)
 
-args = parser.parse_args("search -t -d ../index reuters".split(" "))
-args.func(args)
+# args = parser.parse_args("search -d testindex reuters".split(" "))
+# args = parser.parse_args("build -d testindex -c nonum -c portstem reuters/reut2-000.sgm".split(" "))
+args = parser.parse_args()
+try:
+    args.func(args)
+except AttributeError:
+    parser.print_help()

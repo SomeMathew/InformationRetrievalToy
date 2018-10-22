@@ -11,6 +11,7 @@ INDEX_STATS_FILENAME = "index_stats.txt"
 def build_indexes(dfilters: dict):
     """Build inverted index with each compression techniques in dict_filters"""
     for dname, dfilter in dfilters.items():
+        print("Creating inverted index with compressions: {}".format(dfilter))
         outfile = irsystem.build_index(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 22)],
                                        "./index_{}".format(dname), dfilter)
         print(outfile)

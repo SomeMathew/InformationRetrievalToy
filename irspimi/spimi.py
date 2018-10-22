@@ -1,7 +1,7 @@
 ## Implements the spimi algorithm to build an inverted index
 import os
 import sys
-from typing import Iterable, List
+from typing import Iterable, List, Dict
 from reuters import DocToken
 from inverted_index import extern_output, TermPostings, Posting
 
@@ -19,6 +19,11 @@ class SPIMI:
             os.makedirs(dir)
 
     def invert(self):
+        """Executes the SPIMI algorithm with the given token stream during construction.
+
+        :return: disk block file name
+        :rtype: str
+        """
         dictionary = {}
         if sys.getsizeof(dictionary) < self._blocksize:
             for token in self._token_stream:
@@ -44,6 +49,7 @@ class SPIMI:
         :type dictionary: dict
         :type term: str
         :return: New postings list
+        :rtype: List
         """
         dictionary[term] = []
         return dictionary[term]
@@ -57,6 +63,7 @@ class SPIMI:
         :type dictionary: dict
         :type term: str
         :return: Existing postings list for term
+        :rtype: List[Posting]
         """
         return dictionary[term]
 
@@ -84,6 +91,14 @@ class SPIMI:
                 p.positions.append(pos)
 
     def _write_to_disk(self, sorted_terms: list, dictionary: dict):
+        """Writes a the partial index to a file block on disk.
+
+        :param sorted_terms: List of sorted terms in the index
+        :param dictionary: inverted index
+        :type sorted_terms: List[str]
+        :type dictionary: Dict[str, List[Posting]]
+        :return: block file name
+        """
         output_file_name = "{}/{}_{}.blk".format(self._dir, SPIMI.BLOCK_NAME_PREFIX, self._next_block_suffix)
         try:
             output_file = open(output_file_name, "w+")

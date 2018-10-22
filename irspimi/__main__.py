@@ -54,7 +54,11 @@ def search_mode(args: argparse.Namespace):
 def doc_retrieval_mode(eval_result):
     """Retrieves document from a search result."""
     results = eval_result.results
+    ordered_docid = [docid for docid, details in sorted(eval_result.results.items(),
+                                     key=lambda item: (len(item[1]['terms']), len(item[1]['positions'])),
+                                     reverse=True)]
     while True:
+        print("Document Id List: {}".format(ordered_docid))
         resp = input("Enter a document id to retrieve it. (Type q to search again)\n")
         if resp == "q":
             break
@@ -96,14 +100,14 @@ build_parser.add_argument(
 )
 build_parser.add_argument(
     "--compress-dict", "-c",
-    help="Select a dictionary compression algorithm. This option can be repeated with multiple filters.",
+    help="Select a dictionary compression algorithms.",
     choices=filters_dict.keys(),
     action="append",
     dest="filters"
 )
 build_parser.add_argument(
     "corpus_files",
-    help="List of files for the Reuters Corpus, MUST BE GIVEN IN ORDER",
+    help="List of ordered files for the Reuters Corpus.",
     action="store",
     metavar="CORPUS_FILE",
     nargs="+"
@@ -137,7 +141,7 @@ search_parser.add_argument(
 )
 search_parser.set_defaults(func=search_mode)
 
-# args = parser.parse_args("search -d testindex reuters".split(" "))
+# args = parser.parse_args("search -d ../index reuters".split(" "))
 # args = parser.parse_args("build -d testindex -c nonum -c portstem reuters/reut2-000.sgm".split(" "))
 args = parser.parse_args()
 try:

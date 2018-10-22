@@ -65,6 +65,7 @@ class NoStopWords(Compression):
             print("Error while reading {}: {}".format(filename, e))
 
     def compress(self, token: str):
+        token = token.casefold()
         return token if token not in self._stop_words else None
 
     def __repr__(self):

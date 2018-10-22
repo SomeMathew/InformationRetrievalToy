@@ -147,7 +147,18 @@ class Evaluator:
 
     def _visit_binop(self, node):
         if node.op.type == TokenType.AND:
-            return search.intersect(self._visit(node.left_child), self._visit(node.right_child))
+            left_postings = self._visit(node.left_child)
+            right_postings = self._visit(node.right_child)
+            # Fix to disregard compression which removes terms (Stop Words, no numbers)
+            # This is required for AND operation to not erroneously return no documents
+            if left_postings is None and right_postings is None:
+                return None
+            elif left_postings is None:
+                return right_postings
+            elif right_postings is None:
+                return left_postings
+            else:
+                return search.intersect(left_postings, right_postings)
         elif node.op.type == TokenType.OR:
             return search.union(self._visit(node.left_child), self._visit(node.right_child))
         else:
@@ -155,7 +166,10 @@ class Evaluator:
 
     def _visit_term(self, node):
         postings = self._index.get_postings(node.term.value)
-        self.eval_result.add_postings(node.term.value, postings)
+        if postings is None:
+            self.eval_result.add_postings(node.term.value, [])
+        else:
+            self.eval_result.add_postings(node.term.value, postings)
         return postings
 
     def _visit_unaryop(self, node):
@@ -165,6 +179,7 @@ class Evaluator:
         self._reset()
         tree = self._parser.parse()
         query_result = self._visit(tree)
+        query_result = query_result if query_result is not None else []
         self.eval_result.update_results(query_result)
 
         return self.eval_result

@@ -37,6 +37,10 @@ class InvertedIndex:
         """
         if self._descriptor.compression:
             term = self._descriptor.compression.compress(term)
+        # Fix for compression which filters out words, differentiates the case where no postings are found from
+        # the case where the term should be disregarded for the search
+        if term is None:
+            return None
         if term in self._dictionary:
             self._index_file.seek(self._dictionary[term])
             return extern_input(self._index_file.readline()).postings

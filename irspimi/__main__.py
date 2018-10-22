@@ -55,8 +55,9 @@ def doc_retrieval_mode(eval_result):
     """Retrieves document from a search result."""
     results = eval_result.results
     ordered_docid = [docid for docid, details in sorted(eval_result.results.items(),
-                                     key=lambda item: (len(item[1]['terms']), len(item[1]['positions'])),
-                                     reverse=True)]
+                                                        key=lambda item: (
+                                                        len(item[1]['terms']), len(item[1]['positions'])),
+                                                        reverse=True)]
     while True:
         print("Document Id List: {}".format(ordered_docid))
         resp = input("Enter a document id to retrieve it. (Type q to search again)\n")
@@ -141,7 +142,7 @@ search_parser.add_argument(
 )
 search_parser.set_defaults(func=search_mode)
 
-# args = parser.parse_args("search -d ../index reuters".split(" "))
+# args = parser.parse_args("search -d ../index_normalized reuters".split(" "))
 # args = parser.parse_args("build -d testindex -c nonum -c portstem reuters/reut2-000.sgm".split(" "))
 args = parser.parse_args()
 try:

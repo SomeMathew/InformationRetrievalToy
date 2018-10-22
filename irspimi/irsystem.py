@@ -1,6 +1,7 @@
 from reuters import ReutersCorpusStream
 from spimi import SPIMI
 from merge import MergeSPIMI, MultiPassMergeSPIMI
+from typing import List
 from inverted_index import InvertedIndex, InvertedIndexDescriptor, INVERTED_INDEX_DESCRIPTOR_SUFFIX
 from expression_eval import Parser, Evaluator
 import os
@@ -9,7 +10,20 @@ import dict_compression
 INVERTED_INDEX_FILENAME = "inverted_index.ii"
 
 
-def build_index(files: list, directory: str = ".", compression: dict_compression.Compression = None):
+def build_index(files: List[str], directory: str = ".", compression: dict_compression.Compression = None):
+    """ Build the inverted index and merges it.
+
+    Builds using SPIMI and merges using an external multipass k-way merge
+
+    :param files: Ordered files of the Reuters Corpus
+    :param directory: Directory to output the index
+    :param compression: Dictionary Compression technique
+    :type files: List[str]
+    :type directory: str
+    :type compression: Compression
+    :return: Filename of the index on disk
+    :rtype: str
+    """
     corpus = ReutersCorpusStream(files, compression)
     spimi_inverter = SPIMI(token_stream=corpus, dir="./blocks/")
 
@@ -50,6 +64,7 @@ def _merge_index(filenames: list, directory: str = ".", multipass: bool = True):
 
 
 def search_expr(index: InvertedIndex, expr: str):
+    """Search for an expression in the Inverted Index"""
     parser = Parser(expr)
     evaluator = Evaluator(parser, index)
     res = evaluator.evaluate()
@@ -57,5 +72,6 @@ def search_expr(index: InvertedIndex, expr: str):
 
 
 def load_index(directory: str):
+    """Load an inverted index object"""
     index = InvertedIndex("{}/{}".format(directory, INVERTED_INDEX_FILENAME))
     return index

@@ -84,6 +84,11 @@ class Parser:
     def parse(self):
         """
         Creates the ParseTree from the initialized expression
+
+        Grammar:
+            expr : conj (OR conj)*
+            conj : term (AND term)*
+            term : (NOT) TERM | LPAR expr RPAR
         :return ParseTree: Abstract Syntax Tree of the expression for evaluation
         """
         return self._expression()
@@ -96,6 +101,7 @@ class Parser:
                 "Invalid Syntax. Expected type: {}, received: {}".format(type, self._current_token.type))
 
     def _expression(self):
+        """expr : conj (OR conj)*"""
         node = self._conjunction()
         while self._current_token.type == TokenType.OR:
             op_tok = self._current_token
@@ -104,6 +110,7 @@ class Parser:
         return node
 
     def _conjunction(self):
+        """term (AND term)*"""
         node = self._term()
         while self._current_token.type == TokenType.AND:
             op_tok = self._current_token
@@ -112,6 +119,7 @@ class Parser:
         return node
 
     def _term(self):
+        """term : (NOT) TERM | LPAR expr RPAR"""
         tok = self._current_token
         if tok.type == TokenType.NOT:
             self._ingest(TokenType.NOT)
@@ -194,6 +202,7 @@ class EvaluationResult:
         self.complete = False
 
     def add_postings(self, term: str, postings: List[Posting]):
+        """Add postings list to the evaluation result"""
         self.postings_map[term] = postings
         for p in postings:
             if p.docid not in self.term_map:
@@ -201,6 +210,7 @@ class EvaluationResult:
             self.term_map[p.docid].append(term)
 
     def update_results(self, query_result: List[Posting]):
+        """Update the results once they are computed for query"""
         self.query_result = query_result
         self.results = {posting.docid: {
             "positions": posting.positions,
@@ -210,6 +220,7 @@ class EvaluationResult:
         self.complete = True
 
     def get_postings(self, term: str):
+        """Retrieves the postings for a given term"""
         postings = None
         if term in self.postings_map:
             postings = self.postings_map[term]
@@ -217,6 +228,7 @@ class EvaluationResult:
             postings = []
 
     def get_terms(self, docid: int):
+        """Retrieves the terms found in the given docid"""
         terms = None
         if docid in self.term_map:
             terms = self.term_map[docid]
@@ -224,6 +236,7 @@ class EvaluationResult:
         return terms if terms is not None else []
 
     def update_details(self, reuters_path: str, docid: int = None):
+        """Updates the results with the title of each doc and the doc reference"""
         if docid:
             reuters_details = reuters.docs_details([docid], reuters_path)
         else:

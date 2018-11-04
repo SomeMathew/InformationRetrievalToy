@@ -51,13 +51,38 @@ def search_mode(args: argparse.Namespace):
             doc_retrieval_mode(eval_result)
 
 
+def search_ranked_mode(args: argparse.Namespace):
+    """Search a corpus with ranked retrieval using a pre-built Inverted Index"""
+    index = irsystem.load_index(args.directory)
+    while True:
+        query = input("What do you want to search for? (Type q to exit)\n")
+        if query == "q":
+            print("Goodbye!")
+            break
+        eval_result = irsystem.search_ranked(index, query)
+        if args.show_title:
+            eval_result.update_details(args.corpus_dir[0])
+        result_count = 0
+        for docid, details in eval_result.results.items():
+            result_count += 1
+            if args.show_title:
+                print("#{num}: {title} - DocId {docid}".format(num=result_count, title=details['title'], docid=docid))
+            else:
+                print("#{num}: DocId {docid}".format(num=result_count, docid=docid))
+
+            print("\tTerms:{terms}\n\tWeight: {weight:.2f}\n".format(terms=", ".join(details['terms']),
+                                                                     weight=details['weight']))
+            if result_count >= 10:
+                break
+        print('\nRetrieved {} results.'.format(result_count))
+        if result_count > 0:
+            doc_retrieval_mode(eval_result)
+
+
 def doc_retrieval_mode(eval_result):
     """Retrieves document from a search result."""
     results = eval_result.results
-    ordered_docid = [docid for docid, details in sorted(eval_result.results.items(),
-                                                        key=lambda item: (
-                                                        len(item[1]['terms']), len(item[1]['positions'])),
-                                                        reverse=True)]
+    ordered_docid = [docid for docid, details in eval_result.results.items()]
     while True:
         print("Document Id List: {}".format(ordered_docid))
         resp = input("Enter a document id to retrieve it. (Type q to search again)\n")
@@ -120,6 +145,14 @@ search_parser = subparsers.add_parser(
     "search",
     description="Search in the Reuters Corpus using the previously built index")
 search_parser.add_argument(
+    "--ranked", "-r",
+    help="Retrieval using BM25 ranked retrieval with bag of words model",
+    action="store_const",
+    dest="func",
+    const=search_ranked_mode,
+    default=search_mode
+)
+search_parser.add_argument(
     "--title", "-t",
     help="Show titles in results found, This slows down the results",
     action="store_true",
@@ -140,12 +173,14 @@ search_parser.add_argument(
     metavar="CORPUS_DIR",
     nargs=1
 )
-search_parser.set_defaults(func=search_mode)
+# search_parser.set_defaults(func=search_mode)
 
-# args = parser.parse_args("search -d ../index_normalized reuters".split(" "))
+args = parser.parse_args("search -r -d ../index_norm reuters".split(" "))
 # args = parser.parse_args("build -d testindex -c nonum -c portstem reuters/reut2-000.sgm".split(" "))
-args = parser.parse_args()
-try:
-    args.func(args)
-except AttributeError:
-    parser.print_help()
+# args = parser.parse_args()
+# try:
+#     args.func(args)
+# except AttributeError as e:
+#     print(e)
+#     parser.print_help()
+args.func(args)

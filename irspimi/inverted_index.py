@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from functools import total_ordering
 import re
 from dict_compression import MultipleCompression, NoNumbers, CaseFolding, NoStopWords, PorterStemmer
@@ -16,6 +16,7 @@ class InvertedIndex:
         self._index_file = open(index_filename)
         self._load_dictionary("{}.{}".format(index_filename, DICTIONARY_FILE_SUFFIX))
         self._load_descriptor("{}.{}".format(index_filename, INVERTED_INDEX_DESCRIPTOR_SUFFIX))
+        self.avg_doclength = sum(self._descriptor.doclengths.values()) / len(self._descriptor.doclengths)
 
     def _load_dictionary(self, filename: str):
         with open(filename, "r") as f:
@@ -33,7 +34,7 @@ class InvertedIndex:
 
         :param term: term to search for
         :return: Postings list for the search term
-        :rtype: List[Posting]
+        :rtype: TermPostings
         """
         if self._descriptor.compression:
             term = self._descriptor.compression.compress(term)
@@ -43,9 +44,9 @@ class InvertedIndex:
             return None
         if term in self._dictionary:
             self._index_file.seek(self._dictionary[term])
-            return extern_input(self._index_file.readline()).postings
+            return extern_input(self._index_file.readline())
         else:
-            return []
+            return TermPostings(term, [])
 
     def get_multiple_postings(self, terms: List[str]):
         postings_map = {}
@@ -57,14 +58,23 @@ class InvertedIndex:
     def get_universe(self):
         return self._descriptor.docid_list
 
+    def get_doclength(self, docid: int):
+        docid = int(docid)
+        if docid in self._descriptor.doclengths:
+            return self._descriptor.doclengths[docid]
+        else:
+            return 0
+
+
 
 class InvertedIndexDescriptor:
-    def __init__(self, docid_list: list, compression: dict_compression.Compression = None):
+    def __init__(self, docid_list: list, doclengths: Dict[int, int], compression: dict_compression.Compression = None):
         self.docid_list = sorted(docid_list) if docid_list else None
+        self.doclengths = doclengths
         self.compression = compression
 
     def _as_dict(self):
-        return {"docid_list": self.docid_list, "compression": repr(self.compression)}
+        return {"compression": repr(self.compression), "doclengths": self.doclengths}
 
     def write_to_file(self, filename: str):
         f = open(filename, "w")
@@ -81,10 +91,11 @@ class InvertedIndexDescriptor:
         """
         f = open(filename, "r")
         descriptor_dict = json.load(f)
-        docid_list = descriptor_dict["docid_list"] if "docid_list" in descriptor_dict else None
+        doclengths = descriptor_dict["doclengths"]
+        docid_list = list(doclengths.keys())
         compression = eval(descriptor_dict["compression"]) if "compression" in descriptor_dict and \
                                                               descriptor_dict["compression"] else None
-        descriptor = InvertedIndexDescriptor(docid_list, compression)
+        descriptor = InvertedIndexDescriptor(docid_list, doclengths, compression)
 
         return descriptor
 

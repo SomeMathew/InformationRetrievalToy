@@ -8,7 +8,7 @@ from inverted_index import extern_output, TermPostings, Posting
 
 class SPIMI:
     BLOCK_NAME_PREFIX = "SPIMIBLOCK"
-    DEFAULT_BLOCK_SIZE = 65536  # 64 KB (about 500 Reuter's article)
+    DEFAULT_BLOCK_SIZE = 262144  # 64 KB (about 500 Reuter's article)
 
     def __init__(self, token_stream: Iterable[DocToken], blocksize: int = DEFAULT_BLOCK_SIZE, dir: str = "."):
         self._next_block_suffix = 0

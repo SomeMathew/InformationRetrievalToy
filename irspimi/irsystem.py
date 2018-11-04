@@ -37,7 +37,7 @@ def build_index(files: List[str], directory: str = ".", compression: dict_compre
 
     index_filename = _merge_index(blocks_filenames, directory, multipass=True)
 
-    descriptor = InvertedIndexDescriptor(corpus.docid_list, compression)
+    descriptor = InvertedIndexDescriptor(corpus.docid_list, corpus.doclength_map, compression)
     descriptor.write_to_file("{}/{}.{}".format(directory, INVERTED_INDEX_FILENAME, INVERTED_INDEX_DESCRIPTOR_SUFFIX))
     return index_filename
 

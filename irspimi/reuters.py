@@ -5,7 +5,7 @@ from nltk import word_tokenize, sent_tokenize
 from itertools import chain
 from dict_compression import Compression
 from collections import namedtuple, deque, OrderedDict
-from typing import List
+from typing import List, Union
 
 LAST_DOCID = 21578
 DOC_PER_FILE = 1000
@@ -117,6 +117,7 @@ class ReutersCorpusStream:
         self._current_pos = 0
         self._compression = compression
         self.docid_list = []
+        self.doclength_map = {}
 
     def __iter__(self):
         return self
@@ -130,6 +131,7 @@ class ReutersCorpusStream:
             self.docid_list.append(nextdoc.docid)
             self._current_tokens = nextdoc.get_tokens()
             self._current_pos = 0
+            self._save_doclength(self._current_docid, len(self._current_tokens))
         if self._current_tokens:
             next_token = self._current_tokens.popleft()
             self._current_pos += 1
@@ -169,6 +171,9 @@ class ReutersCorpusStream:
                 print("Could not find {}".format(filename))
         return reuters_docs
 
+    def _save_doclength(self, docid: Union[str, int], length: int):
+        docid = int(docid)
+        self.doclength_map[docid] = length
 
 class ReutersCorpusException(Exception):
     pass

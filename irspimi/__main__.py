@@ -18,7 +18,6 @@ def build_index(args: argparse.Namespace):
             compress_filter = MultipleCompression(filters)
     """Builds the Inverted Index"""
     print("Building index with multipass merge")
-    # outfile = irsystem.build_index(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 22)], "./index_mp", None)
     outfile = irsystem.build_index(args.corpus_files, args.directory, compress_filter)
     print(outfile)
 
@@ -173,14 +172,14 @@ search_parser.add_argument(
     metavar="CORPUS_DIR",
     nargs=1
 )
-# search_parser.set_defaults(func=search_mode)
 
-args = parser.parse_args("search -r -d ../index_norm reuters".split(" "))
+# args = parser.parse_args("search -r -d ../index_norm reuters".split(" "))
 # args = parser.parse_args("build -d testindex -c nonum -c portstem reuters/reut2-000.sgm".split(" "))
-# args = parser.parse_args()
-# try:
-#     args.func(args)
-# except AttributeError as e:
-#     print(e)
-#     parser.print_help()
-args.func(args)
+# args.func(args)
+args = parser.parse_args()
+try:
+    args.func(args)
+except AttributeError as e:
+    print(e)
+    parser.print_help()
+

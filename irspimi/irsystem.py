@@ -4,6 +4,8 @@ from merge import MergeSPIMI, MultiPassMergeSPIMI
 from typing import List
 from inverted_index import InvertedIndex, InvertedIndexDescriptor, INVERTED_INDEX_DESCRIPTOR_SUFFIX
 from expression_eval import Parser, Evaluator
+from eval_result import EvaluationResult
+from rank_bm25_eval import RankedSearchBM25
 import os
 import dict_compression
 
@@ -69,6 +71,19 @@ def search_expr(index: InvertedIndex, expr: str):
     evaluator = Evaluator(parser, index)
     res = evaluator.evaluate()
     return res
+
+
+def search_ranked(index: InvertedIndex, query: str):
+    """Ranked search for a query (bag of word) in the Inverted Index.
+
+    :param index: Inverted index to use for the search
+    :param query: Bag of words query (No operators)
+    :return: Ranked Evaluated Results
+    :rtype: EvaluationResult
+    """
+    evaluator = RankedSearchBM25(query, index)
+    result = evaluator.evaluate()
+    return result
 
 
 def load_index(directory: str):

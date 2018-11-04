@@ -65,6 +65,9 @@ class InvertedIndex:
         else:
             return 0
 
+    def get_doc_count(self):
+        return len(self._descriptor.docid_list)
+
 
 
 class InvertedIndexDescriptor:

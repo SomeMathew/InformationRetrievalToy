@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Tuple
 from inverted_index import Posting
+from collections import OrderedDict
 import reuters
 
 
@@ -7,9 +8,9 @@ class EvaluationResult:
     def __init__(self):
         self.postings_map = {}
         self.term_map = {}
-        self.query_result = None
         self.results = None
         self.complete = False
+        self.ranked = None
 
     def add_postings(self, term: str, postings: List[Posting]):
         """Add postings list to the evaluation result"""
@@ -21,15 +22,29 @@ class EvaluationResult:
 
     def update_results(self, query_result: List[Posting]):
         """Update the results once they are computed for query"""
-        self.query_result = query_result
         self.results = {posting.docid: {
             "positions": posting.positions,
             "terms": self.term_map[posting.docid] if posting.docid in self.term_map else []
-        } for posting in self.query_result}
+        } for posting in query_result}
 
         self.complete = True
+        self.ranked = False
 
-    def update_ranked_results(self, query_result: Heap):
+    def update_ranked_results(self, query_results: List[Tuple[int, float]]):
+        """ Update the ranked results. This should be used after postings list have been added with add_postings.
+
+        :param query_results: Ordered list of tuple (docid, weight)
+        :type query_results: List[Tuple[int, float]]
+        :return: None
+        """
+        self.results = OrderedDict(
+            (docid, {
+                "terms": self.term_map[docid] if docid in self.term_map else [],
+                "weight": weight
+            }) for docid, weight in query_results)
+
+        self.complete = True
+        self.ranked = True
 
     def get_postings(self, term: str):
         """Retrieves the postings for a given term"""

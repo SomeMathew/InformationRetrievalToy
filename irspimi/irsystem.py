@@ -73,7 +73,7 @@ def search_expr(index: InvertedIndex, expr: str):
     return res
 
 
-def search_ranked(index: InvertedIndex, query: str):
+def search_ranked(index: InvertedIndex, query: str, k1: float = 1.2, b: float = 0.5):
     """Ranked search for a query (bag of word) in the Inverted Index.
 
     :param index: Inverted index to use for the search
@@ -81,7 +81,7 @@ def search_ranked(index: InvertedIndex, query: str):
     :return: Ranked Evaluated Results
     :rtype: EvaluationResult
     """
-    evaluator = RankedSearchBM25(query, index)
+    evaluator = RankedSearchBM25(query, index, k1, b)
     result = evaluator.evaluate()
     return result
 

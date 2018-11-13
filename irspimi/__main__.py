@@ -53,12 +53,16 @@ def search_mode(args: argparse.Namespace):
 def search_ranked_mode(args: argparse.Namespace):
     """Search a corpus with ranked retrieval using a pre-built Inverted Index"""
     index = irsystem.load_index(args.directory)
+    k1 = args.k1
+    b = args.b
+    resultLimit = args.resultLimit
     while True:
         query = input("What do you want to search for? (Type q to exit)\n")
         if query == "q":
             print("Goodbye!")
             break
-        eval_result = irsystem.search_ranked(index, query)
+        eval_result = irsystem.search_ranked(index, query, k1, b)
+        print(k1, b)
         if args.show_title:
             eval_result.update_details(args.corpus_dir[0])
         result_count = 0
@@ -71,9 +75,9 @@ def search_ranked_mode(args: argparse.Namespace):
 
             print("\tTerms:{terms}\n\tWeight: {weight:.2f}\n".format(terms=", ".join(details['terms']),
                                                                      weight=details['weight']))
-            if result_count >= 10:
+            if resultLimit and result_count >= resultLimit:
                 break
-        print('\nRetrieved {} results.'.format(result_count))
+        print('\nRetrieved {} results out of {}.'.format(result_count, len(eval_result.results.items())))
         if result_count > 0:
             doc_retrieval_mode(eval_result)
 
@@ -150,6 +154,29 @@ search_parser.add_argument(
     dest="func",
     const=search_ranked_mode,
     default=search_mode
+)
+search_parser.add_argument(
+    "-k1",
+    help="Set the k1 parameter for ranked retrieval using BM25",
+    default=1.2,
+    type=float,
+    action="store",
+    dest="k1"
+)
+search_parser.add_argument(
+    "-b",
+    help="Set the b parameter for ranked retrieval using BM25",
+    default=0.75,
+    type=float,
+    action="store",
+    dest="b"
+)
+search_parser.add_argument(
+    "--limit", "-l",
+    help="Limit the number of results to return",
+    type=int,
+    action="store",
+    dest="resultLimit"
 )
 search_parser.add_argument(
     "--title", "-t",

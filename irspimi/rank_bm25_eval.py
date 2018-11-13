@@ -9,14 +9,29 @@ from operator import itemgetter
 
 class RankedSearchBM25:
     def __init__(self, query: str, index: InvertedIndex, k1: float = 1.2, b: float = 0.75):
-        # TODO documentation
+        """Initializes the query processor for Ranked Retrieval using Okapi BM25.
+        To use: create the object then call the evaluate method.
+
+        :param query: Search query - Will be processed as a bag of word (no boolean ops)
+        :type query: str
+        :param index: InvertedIndex to search with
+        :type index: InvertedIndex
+        :param k1: Weight of the term frequency effect on scoring. 0 disregards tf.
+        :type k1: float
+        :param b: Scaling in of document length, b in [0,1]. 0 -> no length normalization, 1 -> full scaling.
+        :type b: float
+        """
         self.query = word_tokenize(query)
         self.index = index
         self.k1 = k1
         self.b = b
 
     def evaluate(self):
-        # TODO documentation
+        """Evaluates the search query.
+
+        :return: Ranked Search query results
+        :rtype: EvaluationResult
+        """
         term_postings_list = []
         for t in self.query:
             term_postings = self.index.get_postings(t)
@@ -55,7 +70,7 @@ class RankedSearchBM25:
         accumulators = {}
         doc_count = self.index.get_doc_count()
         for term_postings in term_postings_list:
-            idf = log2(doc_count/len(term_postings.postings)) if term_postings.postings else 0
+            idf = log2(doc_count / len(term_postings.postings)) if term_postings.postings else 0
             for p in term_postings.postings:
                 tf = len(p.positions)
                 dl = self.index.get_doclength(p.docid)

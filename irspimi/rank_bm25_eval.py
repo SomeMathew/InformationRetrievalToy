@@ -62,6 +62,8 @@ class RankedSearchBM25:
     def _search_scored(self, term_postings_list: List[TermPostings]):
         """ Score the resulting list of documents using the BM25 weight.
 
+        Term at a time ranking is used in this implementation.
+
         :param term_postings_list: List of TermPostings for the terms in the search
         :type term_postings_list: List[TermPostings]
         :return: Dictionary of docid to bm25 weight
@@ -77,7 +79,14 @@ class RankedSearchBM25:
 
                 if p.docid not in accumulators:
                     accumulators[p.docid] = 0
-                accumulators[p.docid] += self._compute_bm25_term(idf, tf, dl)
+                termWeight = self._compute_bm25_term(idf, tf, dl)
+                # Useful output to evaluate the weighting components - Used in the report
+                # if p in [20891, 4008, 16780, 8593, 3560, 20860, 20719, 7525, 8500, 16824]:
+                #     print("term:{}, doc: {}, doc_len: {}, idf: {:.2f}, tf: {}, term weight: {:.2f}".format(
+                #         term_postings.term,
+                #         p.docid, dl, idf, tf,
+                #         termWeight))
+                accumulators[p.docid] += termWeight
         return accumulators
 
     def _compute_bm25_term(self, idf, tf, dl):

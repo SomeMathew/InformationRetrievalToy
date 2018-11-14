@@ -1,5 +1,6 @@
 import argparse
 import irsystem
+from itertools import islice
 from dict_compression import PorterStemmer, NoStopWords, CaseFolding, NoNumbers, MultipleCompression
 
 filters_dict = {"nonum": NoNumbers(),
@@ -62,9 +63,8 @@ def search_ranked_mode(args: argparse.Namespace):
             print("Goodbye!")
             break
         eval_result = irsystem.search_ranked(index, query, k1, b)
-        print(k1, b)
         if args.show_title:
-            eval_result.update_details(args.corpus_dir[0])
+            eval_result.update_details(args.corpus_dir[0], max_topk=resultLimit)
         result_count = 0
         for docid, details in eval_result.results.items():
             result_count += 1
@@ -73,19 +73,20 @@ def search_ranked_mode(args: argparse.Namespace):
             else:
                 print("#{num}: DocId {docid}".format(num=result_count, docid=docid))
 
-            print("\tTerms:{terms}\n\tWeight: {weight:.2f}\n".format(terms=", ".join(details['terms']),
+            print("\tTerms:{terms}\t\tWeight: {weight:.2f}\n".format(terms=", ".join(details['terms']),
                                                                      weight=details['weight']))
             if resultLimit and result_count >= resultLimit:
                 break
         print('\nRetrieved {} results out of {}.'.format(result_count, len(eval_result.results.items())))
         if result_count > 0:
-            doc_retrieval_mode(eval_result)
+            doc_retrieval_mode(eval_result, resultLimit)
 
 
-def doc_retrieval_mode(eval_result):
+def doc_retrieval_mode(eval_result, max_topk=None):
     """Retrieves document from a search result."""
     results = eval_result.results
-    ordered_docid = [docid for docid, details in eval_result.results.items()]
+    ordered_docid = [docid for docid, details in
+                     (eval_result.results.items() if not max_topk else islice(eval_result.results.items(), max_topk))]
     while True:
         print("Document Id List: {}".format(ordered_docid))
         resp = input("Enter a document id to retrieve it. (Type q to search again)\n")
@@ -157,7 +158,7 @@ search_parser.add_argument(
 )
 search_parser.add_argument(
     "-k1",
-    help="Set the k1 parameter for ranked retrieval using BM25",
+    help="BM25 parameter, weight of the term frequency effect on scoring. 0 disregards tf. DEFAULT 1.2",
     default=1.2,
     type=float,
     action="store",
@@ -165,7 +166,7 @@ search_parser.add_argument(
 )
 search_parser.add_argument(
     "-b",
-    help="Set the b parameter for ranked retrieval using BM25",
+    help="BM25 Parameter, scaling of document length, b in [0,1]. 0 -> no length normalization, 1 -> full scaling. DEFAULT 0.75",
     default=0.75,
     type=float,
     action="store",
@@ -200,13 +201,13 @@ search_parser.add_argument(
     nargs=1
 )
 
-# args = parser.parse_args("search -r -d ../index_norm reuters".split(" "))
-# args = parser.parse_args("build -d testindex -c nonum -c portstem reuters/reut2-000.sgm".split(" "))
+# args = parser.parse_args("search -r -t -l15 -d ../index_norm ../reuters".split(" "))
+# args = parser.parse_args("build -d testindex -c nonum -c casefold -c portstem ../reuters/reut2-017.sgm".split(" "))
 # args.func(args)
 args = parser.parse_args()
 try:
+
     args.func(args)
 except AttributeError as e:
     print(e)
     parser.print_help()
-

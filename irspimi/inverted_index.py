@@ -59,7 +59,7 @@ class InvertedIndex:
         return self._descriptor.docid_list
 
     def get_doclength(self, docid: int):
-        docid = int(docid)
+        docid = str(docid)
         if docid in self._descriptor.doclengths:
             return self._descriptor.doclengths[docid]
         else:
@@ -67,7 +67,6 @@ class InvertedIndex:
 
     def get_doc_count(self):
         return len(self._descriptor.docid_list)
-
 
 
 class InvertedIndexDescriptor:

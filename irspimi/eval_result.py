@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from inverted_index import Posting
 from collections import OrderedDict
+from itertools import islice
 import reuters
 
 
@@ -62,12 +63,13 @@ class EvaluationResult:
 
         return terms if terms is not None else []
 
-    def update_details(self, reuters_path: str, docid: int = None):
+    def update_details(self, reuters_path: str, docid: int = None, max_topk: int = None):
         """Updates the results with the title of each doc and the doc reference"""
         if docid:
             reuters_details = reuters.docs_details([docid], reuters_path)
         else:
-            reuters_details = reuters.docs_details(self.results.keys(), reuters_path)
+            reuters_details = reuters.docs_details(
+                self.results.keys() if not max_topk else islice(self.results.keys(), max_topk), reuters_path)
 
         for docid, doc in reuters_details.items():
             if docid in self.results:

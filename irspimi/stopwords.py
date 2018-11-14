@@ -8,7 +8,7 @@ The ir system then uses this list to create a dictionary compression from first 
 from reuters import ReutersCorpusStream
 
 dictionary = {}
-rc = ReutersCorpusStream(["reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 23)])
+rc = ReutersCorpusStream(["../reuters/reut2-0{:02}.sgm".format(k) for k in range(0, 23)])
 for tok in rc:
     token_processed = tok.token.casefold()
     if not token_processed.isdigit():
